@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { SignJWT } from "jose"
-import { cookies } from "next/headers"
 import { z } from "zod"
 
 const secret = new TextEncoder().encode(
@@ -79,21 +78,6 @@ export async function POST(request: NextRequest) {
       path: "/",
       maxAge,
     })
-
-    // Also set using cookies() for compatibility
-    try {
-      const cookieStore = cookies()
-      cookieStore.set("auth-token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge,
-      })
-    } catch (cookieError) {
-      console.warn("Cookie setting warning:", cookieError)
-      // Continue anyway, response.cookies.set should work
-    }
 
     return response
   } catch (error) {
