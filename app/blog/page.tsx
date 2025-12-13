@@ -82,6 +82,15 @@ export default async function BlogPage() {
 
   const displayPosts = posts.length > 0 ? posts : samplePosts
 
+  // Helper function to safely get excerpt or content
+  const getPostDescription = (post: typeof displayPosts[0]): string => {
+    if (post.excerpt) return post.excerpt
+    if ('content' in post && typeof post.content === 'string' && post.content) {
+      return post.content.substring(0, 150)
+    }
+    return ''
+  }
+
   return (
     <div className="min-h-screen">
       <section className="py-20 md:py-32 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
@@ -118,7 +127,7 @@ export default async function BlogPage() {
                   </div>
                   <CardTitle className="text-xl line-clamp-2">{post.title}</CardTitle>
                   <CardDescription className="line-clamp-3">
-                    {post.excerpt || post.content?.substring(0, 150)}
+                    {getPostDescription(post)}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="mt-auto">
