@@ -1,12 +1,26 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/simple-auth"
+import { auth } from "@/lib/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { FileText, MessageSquare, Receipt, FolderKanban, User } from "lucide-react"
 
 export default async function DashboardPage() {
-  const session = await getSession()
+  // Check NextAuth session first (for OAuth users)
+  const nextAuthSession = await auth()
+  let session: { email: string; id?: string; role?: string } | null = null
+  
+  if (nextAuthSession?.user) {
+    session = {
+      email: nextAuthSession.user.email || "",
+      id: (nextAuthSession.user as any).id || "",
+      role: (nextAuthSession.user as any).role || "USER",
+    }
+  } else {
+    // Fallback to custom JWT session (for email/password users)
+    session = await getSession()
+  }
 
   if (!session) {
     redirect("/login?redirect=/dashboard")

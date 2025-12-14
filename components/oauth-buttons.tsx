@@ -14,7 +14,8 @@ export function OAuthButtons() {
   const handleOAuthSignIn = async (provider: "google" | "facebook") => {
     setLoading(provider)
     try {
-      const callbackUrl = redirectParam || "/dashboard"
+      // Redirect về trang chủ sau khi đăng nhập OAuth thành công
+      const callbackUrl = redirectParam || "/"
       await signIn(provider, {
         callbackUrl: callbackUrl,
         redirect: true,

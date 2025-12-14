@@ -6,8 +6,45 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
+// Validate environment variables
+const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim()
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim()
+const facebookClientId = process.env.FACEBOOK_CLIENT_ID?.trim()
+const facebookClientSecret = process.env.FACEBOOK_CLIENT_SECRET?.trim()
+// Remove quotes if present and trim
+const nextAuthSecretRaw = process.env.NEXTAUTH_SECRET?.trim().replace(/^["']|["']$/g, '') || ''
+const nextAuthSecret = nextAuthSecretRaw || "codex-studio-secret-key-2024-change-in-production-min-32-chars"
+const nextAuthUrl = process.env.NEXTAUTH_URL?.trim().replace(/^["']|["']$/g, '')
+
+// Validate secret length (NextAuth requires at least 32 characters)
+if (nextAuthSecret.length < 32) {
+  console.error('❌ NEXTAUTH_SECRET must be at least 32 characters long')
+}
+
+// Log missing environment variables in development
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔍 NextAuth Configuration:')
+  console.log('  NEXTAUTH_URL:', nextAuthUrl || 'NOT SET')
+  console.log('  NEXTAUTH_SECRET:', nextAuthSecret ? `${nextAuthSecret.substring(0, 10)}... (${nextAuthSecret.length} chars)` : 'NOT SET')
+  console.log('  GOOGLE_CLIENT_ID:', googleClientId ? `${googleClientId.substring(0, 20)}...` : 'NOT SET')
+  console.log('  GOOGLE_CLIENT_SECRET:', googleClientSecret ? 'SET' : 'NOT SET')
+  
+  if (!nextAuthSecret || nextAuthSecret.length < 32) {
+    console.warn('⚠️ NEXTAUTH_SECRET is not set or too short (min 32 chars)')
+  }
+  if (!nextAuthUrl) {
+    console.warn('⚠️ NEXTAUTH_URL is not set')
+  }
+  if (!googleClientId || !googleClientSecret) {
+    console.warn('⚠️ Google OAuth credentials are missing')
+  }
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
+  secret: nextAuthSecret || "codex-studio-secret-key-2024-change-in-production-min-32-chars",
+  trustHost: true, // Trust Vercel's host and localhost
+  debug: process.env.NODE_ENV === 'development', // Enable debug in development
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -45,16 +82,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       },
     }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      allowDangerousEmailAccountLinking: true,
-    }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID || "",
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "",
-      allowDangerousEmailAccountLinking: true,
-    }),
+    // Only add Google provider if credentials are available
+    ...(googleClientId && googleClientSecret ? [
+      GoogleProvider({
+        clientId: googleClientId,
+        clientSecret: googleClientSecret,
+        allowDangerousEmailAccountLinking: true,
+      })
+    ] : []),
+    // Only add Facebook provider if credentials are available
+    ...(facebookClientId && facebookClientSecret ? [
+      FacebookProvider({
+        clientId: facebookClientId,
+        clientSecret: facebookClientSecret,
+        allowDangerousEmailAccountLinking: true,
+      })
+    ] : []),
   ],
   callbacks: {
     async jwt({ token, user, account }) {
@@ -100,6 +143,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  useSecureCookies: process.env.NODE_ENV === 'production',
 })
 
