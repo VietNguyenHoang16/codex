@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { LogOut, User, Loader2 } from "lucide-react"
 
@@ -20,13 +19,13 @@ export function UserMenu({ email }: UserMenuProps) {
 
     setIsLoggingOut(true)
     try {
-      // Use NextAuth signOut
-      await signOut({ 
-        redirect: false,
-        callbackUrl: "/"
+      // Call logout API
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
       })
       
-      // Small delay to ensure session is cleared
+      // Small delay to ensure cookie is cleared
       await new Promise(resolve => setTimeout(resolve, 100))
       
       // Force a hard refresh to clear all client-side state
@@ -40,10 +39,7 @@ export function UserMenu({ email }: UserMenuProps) {
     } catch (error) {
       console.error("Logout error:", error)
       // Even if there's an error, try to redirect anyway
-      alert("Đang đăng xuất...")
-      setTimeout(() => {
-        window.location.href = "/"
-      }, 500)
+      window.location.href = "/"
     } finally {
       setIsLoggingOut(false)
     }

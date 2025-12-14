@@ -1,14 +1,22 @@
 import { NextResponse } from "next/server"
-import { signOut } from "@/lib/auth"
 
 export async function POST() {
   try {
-    await signOut({ redirect: false })
-    
-    return NextResponse.json({ 
+    const response = NextResponse.json({ 
       success: true, 
       message: "Đăng xuất thành công" 
     })
+    
+    // Xóa cookie auth-token
+    response.cookies.set("auth-token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0, // Xóa cookie ngay lập tức
+    })
+    
+    return response
   } catch (error) {
     console.error("Logout error:", error)
     

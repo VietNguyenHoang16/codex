@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/simple-auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { FileText, MessageSquare, Receipt, FolderKanban, User } from "lucide-react"
 
 export default async function DashboardPage() {
-  const session = await auth()
+  const session = await getSession()
 
-  if (!session || !session.user) {
+  if (!session) {
     redirect("/login?redirect=/dashboard")
   }
 
@@ -17,7 +17,7 @@ export default async function DashboardPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground mt-2">
-          Chào mừng, {session.user.email || session.user.name || "Người dùng"}
+          Chào mừng, {session.email || "Người dùng"}
         </p>
       </div>
 

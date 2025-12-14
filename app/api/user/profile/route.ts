@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/simple-auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
@@ -11,16 +11,16 @@ const updateProfileSchema = z.object({
 
 export async function GET() {
   try {
-    const session = await auth()
+    const session = await getSession()
 
-    if (!session || !session.user) {
+    if (!session) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       )
     }
 
-    const userId = (session.user as any).id
+    const userId = session.id
 
     if (!userId) {
       return NextResponse.json(
@@ -60,16 +60,16 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth()
+    const session = await getSession()
 
-    if (!session || !session.user) {
+    if (!session) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       )
     }
 
-    const userId = (session.user as any).id
+    const userId = session.id
 
     if (!userId) {
       return NextResponse.json(

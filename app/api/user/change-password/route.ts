@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/simple-auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
@@ -15,16 +15,16 @@ const changePasswordSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
+    const session = await getSession()
 
-    if (!session || !session.user) {
+    if (!session) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       )
     }
 
-    const userId = (session.user as any).id
+    const userId = session.id
 
     if (!userId) {
       return NextResponse.json(
@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
 
 
 

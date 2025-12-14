@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/simple-auth"
 
 export async function GET() {
-  const session = await auth()
+  const session = await getSession()
   
-  if (!session || !session.user) {
+  if (!session) {
     return NextResponse.json({ session: null })
   }
 
   return NextResponse.json({ 
     session: {
-      email: session.user.email || "",
-      name: session.user.name || "",
-      id: (session.user as any).id || "",
-      role: (session.user as any).role || "USER",
+      email: session.email || "",
+      name: "",
+      id: session.id || "",
+      role: session.role || "USER",
     }
   })
 }
